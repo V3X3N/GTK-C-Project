@@ -1,232 +1,232 @@
 #include <gtk/gtk.h>
 
-// Struktura reprezentująca informacje o książce
+// Structure representing book information
 typedef struct {
-    char *imie;
-    char *nazwisko;
-    char *tytul;
-    float cena;
-    int liczba;
-} Ksiazka;
+    char *firstName;
+    char *lastName;
+    char *title;
+    float price;
+    int quantity;
+} Book;
 
-// Lista przechowująca informacje o książkach
-GList *lista_ksiazek = NULL;
+// List storing information about books
+GList *bookList = NULL;
 
-// Tablica widgetów do wprowadzania danych
-GtkWidget *wprowadzenie[5];
+// Array of widgets for data entry
+GtkWidget *entryWidgets[5];
 
-// Etykieta do wyświetlania wyników wyszukiwania
-GtkWidget *wyniki_etykieta;
+// Label for displaying search results
+GtkWidget *resultsLabel;
 
-// Funkcja zapisująca dane o książce
-static void zapisz_dane(GtkWidget *widget, gpointer data) {
-    // Pobranie danych z pól wprowadzania
-    const char *imie = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(wprowadzenie[0])));
-    const char *nazwisko = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(wprowadzenie[1])));
-    const char *tytul = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(wprowadzenie[2])));
-    float cena = atof(gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(wprowadzenie[3]))));
-    int liczba = atoi(gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(wprowadzenie[4]))));
+// Function saving book data
+static void saveData(GtkWidget *widget, gpointer data) {
+    // Get data from entry fields
+    const char *firstName = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(entryWidgets[0])));
+    const char *lastName = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(entryWidgets[1])));
+    const char *title = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(entryWidgets[2])));
+    float price = atof(gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(entryWidgets[3]))));
+    int quantity = atoi(gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(entryWidgets[4]))));
 
-    // Tworzenie nowej struktury Ksiazka i zapis danych
-    Ksiazka *nowa_ksiazka = g_malloc(sizeof(Ksiazka));
-    nowa_ksiazka->imie = g_strdup(imie);
-    nowa_ksiazka->nazwisko = g_strdup(nazwisko);
-    nowa_ksiazka->tytul = g_strdup(tytul);
-    nowa_ksiazka->cena = cena;
-    nowa_ksiazka->liczba = liczba;
+    // Create a new Book structure and save the data
+    Book *newBook = g_malloc(sizeof(Book));
+    newBook->firstName = g_strdup(firstName);
+    newBook->lastName = g_strdup(lastName);
+    newBook->title = g_strdup(title);
+    newBook->price = price;
+    newBook->quantity = quantity;
 
-    // Dodanie nowej książki do listy
-    lista_ksiazek = g_list_append(lista_ksiazek, nowa_ksiazka);
+    // Add the new book to the list
+    bookList = g_list_append(bookList, newBook);
 }
 
-// Deklaracja funkcji usuwajacej ksiazke z listy
-static void usun_ksiazke(GtkWidget *widget, gpointer data);
+// Declaration of the function to remove a book from the list
+static void removeBook(GtkWidget *widget, gpointer data);
 
-// Funkcja wyświetlająca listę książek
-static void wyswietl_liste(GtkWidget *widget, gpointer data) {
-    GtkWidget *okno_lista = gtk_application_window_new(GTK_APPLICATION(data));
-    gtk_window_set_title(GTK_WINDOW(okno_lista), "Lista Książek");
+// Function displaying the list of books
+static void displayList(GtkWidget *widget, gpointer data) {
+    GtkWidget *listWindow = gtk_application_window_new(GTK_APPLICATION(data));
+    gtk_window_set_title(GTK_WINDOW(listWindow), "Book List");
 
-    GtkWidget *kontener_lista = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    gtk_widget_set_margin_start(kontener_lista, 10);
-    gtk_widget_set_margin_end(kontener_lista, 10);
-    gtk_widget_set_margin_top(kontener_lista, 10);
-    gtk_widget_set_margin_bottom(kontener_lista, 10);
+    GtkWidget *listContainer = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    gtk_widget_set_margin_start(listContainer, 10);
+    gtk_widget_set_margin_end(listContainer, 10);
+    gtk_widget_set_margin_top(listContainer, 10);
+    gtk_widget_set_margin_bottom(listContainer, 10);
 
     GList *iter;
-    int indeks = 0;
-    for (iter = lista_ksiazek; iter != NULL; iter = g_list_next(iter)) {
-        Ksiazka *ksiazka = (Ksiazka *)iter->data;
-        // Tworzenie informacji o książce
-        char *info = g_strdup_printf("Imię: %s\nNazwisko: %s\nTytuł: %s\nLiczba: %d\nCena: %.2f\n\n",
-                                     ksiazka->imie, ksiazka->nazwisko, ksiazka->tytul, ksiazka->liczba, ksiazka->cena);
-        GtkWidget *etykieta_ksiazki = gtk_label_new(info);
+    int index = 0;
+    for (iter = bookList; iter != NULL; iter = g_list_next(iter)) {
+        Book *book = (Book *)iter->data;
+        // Create book information
+        char *info = g_strdup_printf("First Name: %s\nLast Name: %s\nTitle: %s\nQuantity: %d\nPrice: %.2f\n\n",
+                                     book->firstName, book->lastName, book->title, book->quantity, book->price);
+        GtkWidget *bookLabel = gtk_label_new(info);
         g_free(info);
 
-        // Tworzenie przycisku do usuwania książki
-        GtkWidget *przycisk_usun = gtk_button_new_with_label("Usuń");
-        g_signal_connect(przycisk_usun, "clicked", G_CALLBACK(usun_ksiazke), GINT_TO_POINTER(indeks));
-        gtk_box_append(GTK_BOX(kontener_lista), przycisk_usun);
-        gtk_box_append(GTK_BOX(kontener_lista), etykieta_ksiazki);
+        // Create a button to remove the book
+        GtkWidget *removeButton = gtk_button_new_with_label("Remove");
+        g_signal_connect(removeButton, "clicked", G_CALLBACK(removeBook), GINT_TO_POINTER(index));
+        gtk_box_append(GTK_BOX(listContainer), removeButton);
+        gtk_box_append(GTK_BOX(listContainer), bookLabel);
 
-        indeks++;
+        index++;
     }
 
-    // Ustawienie widżetu z listą książek w oknie
-    gtk_window_set_child(GTK_WINDOW(okno_lista), kontener_lista);
-    gtk_window_present(GTK_WINDOW(okno_lista));
+    // Set the widget with the book list in the window
+    gtk_window_set_child(GTK_WINDOW(listWindow), listContainer);
+    gtk_window_present(GTK_WINDOW(listWindow));
 }
 
-// Funkcja usuwająca książkę z listy
-static void usun_ksiazke(GtkWidget *widget, gpointer data) {
-    int indeks_do_usuniecia = GPOINTER_TO_INT(data);
+// Function removing a book from the list
+static void removeBook(GtkWidget *widget, gpointer data) {
+    int indexToRemove = GPOINTER_TO_INT(data);
 
-    if (indeks_do_usuniecia >= 0 && indeks_do_usuniecia < g_list_length(lista_ksiazek)) {
-        lista_ksiazek = g_list_delete_link(lista_ksiazek, g_list_nth(lista_ksiazek, indeks_do_usuniecia));
-        wyswietl_liste(NULL, NULL);
+    if (indexToRemove >= 0 && indexToRemove < g_list_length(bookList)) {
+        bookList = g_list_delete_link(bookList, g_list_nth(bookList, indexToRemove));
+        displayList(NULL, NULL);
     }
 }
 
-// Funkcja wyświetlająca nowe okno
-static void nowe_okno(GtkWidget *widget, gpointer data) {
-    GtkWidget *okno_nowe = gtk_application_window_new(GTK_APPLICATION(data));
-    gtk_window_set_title(GTK_WINDOW(okno_nowe), "Nowe Okno");
+// Function displaying a new window
+static void newWindow(GtkWidget *widget, gpointer data) {
+    GtkWidget *newWindow = gtk_application_window_new(GTK_APPLICATION(data));
+    gtk_window_set_title(GTK_WINDOW(newWindow), "New Window");
 
-    GtkWidget *etykieta_nowa = gtk_label_new("To jest nowe okno!");
-    gtk_widget_set_margin_start(etykieta_nowa, 10);
-    gtk_widget_set_margin_end(etykieta_nowa, 10);
-    gtk_widget_set_margin_top(etykieta_nowa, 10);
-    gtk_widget_set_margin_bottom(etykieta_nowa, 10);
+    GtkWidget *newLabel = gtk_label_new("This is a new window!");
+    gtk_widget_set_margin_start(newLabel, 10);
+    gtk_widget_set_margin_end(newLabel, 10);
+    gtk_widget_set_margin_top(newLabel, 10);
+    gtk_widget_set_margin_bottom(newLabel, 10);
 
-    // Ustawienie widżetu z etykietą w oknie
-    gtk_window_set_child(GTK_WINDOW(okno_nowe), etykieta_nowa);
-    gtk_window_present(GTK_WINDOW(okno_nowe));
+    // Set the widget with the label in the window
+    gtk_window_set_child(GTK_WINDOW(newWindow), newLabel);
+    gtk_window_present(GTK_WINDOW(newWindow));
 }
 
-// Funkcja wyszukująca książkę
-static void szukaj_ksiazki(GtkWidget *widget, gpointer data) {
-    const char *szukane_imie = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(wprowadzenie[0])));
-    const char *szukane_nazwisko = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(wprowadzenie[1])));
-    const char *szukany_tytul = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(wprowadzenie[2])));
+// Function searching for a book
+static void searchBook(GtkWidget *widget, gpointer data) {
+    const char *searchedFirstName = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(entryWidgets[0])));
+    const char *searchedLastName = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(entryWidgets[1])));
+    const char *searchedTitle = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(entryWidgets[2])));
 
     GList *iter;
-    for (iter = lista_ksiazek; iter != NULL; iter = g_list_next(iter)) {
-        Ksiazka *ksiazka = (Ksiazka *)iter->data;
-        if (g_strcmp0(ksiazka->imie, szukane_imie) == 0 &&
-            g_strcmp0(ksiazka->nazwisko, szukane_nazwisko) == 0 &&
-            g_strcmp0(ksiazka->tytul, szukany_tytul) == 0) {
-            GtkWidget *okno_wyniku = gtk_application_window_new(GTK_APPLICATION(data));
-            gtk_window_set_title(GTK_WINDOW(okno_wyniku), "Wynik wyszukiwania");
+    for (iter = bookList; iter != NULL; iter = g_list_next(iter)) {
+        Book *book = (Book *)iter->data;
+        if (g_strcmp0(book->firstName, searchedFirstName) == 0 &&
+            g_strcmp0(book->lastName, searchedLastName) == 0 &&
+            g_strcmp0(book->title, searchedTitle) == 0) {
+            GtkWidget *resultWindow = gtk_application_window_new(GTK_APPLICATION(data));
+            gtk_window_set_title(GTK_WINDOW(resultWindow), "Search Result");
 
-            // Tworzenie informacji o znalezionej książce
-            char *info = g_strdup_printf("Imię: %s\nNazwisko: %s\nTytuł: %s\nLiczba: %d\nCena: %.2f\n",
-                                         ksiazka->imie, ksiazka->nazwisko, ksiazka->tytul, ksiazka->liczba, ksiazka->cena);
-            wyniki_etykieta = gtk_label_new(info);
+            // Create information about the found book
+            char *info = g_strdup_printf("First Name: %s\nLast Name: %s\nTitle: %s\nQuantity: %d\nPrice: %.2f\n",
+                                         book->firstName, book->lastName, book->title, book->quantity, book->price);
+            resultsLabel = gtk_label_new(info);
             g_free(info);
 
-            gtk_widget_set_margin_start(wyniki_etykieta, 10);
-            gtk_widget_set_margin_end(wyniki_etykieta, 10);
-            gtk_widget_set_margin_top(wyniki_etykieta, 10);
-            gtk_widget_set_margin_bottom(wyniki_etykieta, 10);
+            gtk_widget_set_margin_start(resultsLabel, 10);
+            gtk_widget_set_margin_end(resultsLabel, 10);
+            gtk_widget_set_margin_top(resultsLabel, 10);
+            gtk_widget_set_margin_bottom(resultsLabel, 10);
 
-            // Ustawienie widżetu z etykietą w oknie
-            gtk_window_set_child(GTK_WINDOW(okno_wyniku), wyniki_etykieta);
-            gtk_window_present(GTK_WINDOW(okno_wyniku));
+            // Set the widget with the label in the window
+            gtk_window_set_child(GTK_WINDOW(resultWindow), resultsLabel);
+            gtk_window_present(GTK_WINDOW(resultWindow));
             return;
         }
     }
 
-    // Informacja o braku wyniku wyszukiwania
-    GtkWidget *okno_braku_wyniku = gtk_application_window_new(GTK_APPLICATION(data));
-    gtk_window_set_title(GTK_WINDOW(okno_braku_wyniku), "Brak wyniku wyszukiwania");
+    // Information about no search result
+    GtkWidget *noResultWindow = gtk_application_window_new(GTK_APPLICATION(data));
+    gtk_window_set_title(GTK_WINDOW(noResultWindow), "No Search Result");
 
-    GtkWidget *brak_wyniku_etykieta = gtk_label_new("Nie znaleziono pasującej książki.");
-    gtk_widget_set_margin_start(brak_wyniku_etykieta, 10);
-    gtk_widget_set_margin_end(brak_wyniku_etykieta, 10);
-    gtk_widget_set_margin_top(brak_wyniku_etykieta, 10);
-    gtk_widget_set_margin_bottom(brak_wyniku_etykieta, 10);
+    GtkWidget *noResultLabel = gtk_label_new("No matching book found.");
+    gtk_widget_set_margin_start(noResultLabel, 10);
+    gtk_widget_set_margin_end(noResultLabel, 10);
+    gtk_widget_set_margin_top(noResultLabel, 10);
+    gtk_widget_set_margin_bottom(noResultLabel, 10);
 
-    // Ustawienie widżetu z etykietą w oknie
-    gtk_window_set_child(GTK_WINDOW(okno_braku_wyniku), brak_wyniku_etykieta);
-    gtk_window_present(GTK_WINDOW(okno_braku_wyniku));
+    // Set the widget with the label in the window
+    gtk_window_set_child(GTK_WINDOW(noResultWindow), noResultLabel);
+    gtk_window_present(GTK_WINDOW(noResultWindow));
 }
 
-// Funkcja aktywująca główne okno aplikacji
-static void aktywuj(GtkApplication *app, gpointer user_data) {
-    GtkWidget *okno;
-    GtkWidget *siatka;
-    GtkWidget *przycisk;
-    GtkWidget *etykieta[5];
-    GtkEntryBuffer *bufor[5];
+// Function activating the main application window
+static void activate(GtkApplication *app, gpointer user_data) {
+    GtkWidget *window;
+    GtkWidget *grid;
+    GtkWidget *button;
+    GtkWidget *labels[5];
+    GtkEntryBuffer *buffers[5];
 
-    // Utworzenie głównego okna
-    okno = gtk_application_window_new(app);
-    gtk_window_set_title(GTK_WINDOW(okno), "Okno");
+    // Create the main window
+    window = gtk_application_window_new(app);
+    gtk_window_set_title(GTK_WINDOW(window), "Window");
 
-    // Utworzenie siatki do rozmieszczenia elementów
-    siatka = gtk_grid_new();
-    gtk_grid_set_row_homogeneous(GTK_GRID(siatka), TRUE);
-    gtk_grid_set_column_homogeneous(GTK_GRID(siatka), TRUE);
+    // Create a grid to layout elements
+    grid = gtk_grid_new();
+    gtk_grid_set_row_homogeneous(GTK_GRID(grid), TRUE);
+    gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
 
-    // Ustawienie siatki jako zawartość okna
-    gtk_window_set_child(GTK_WINDOW(okno), siatka);
+    // Set the grid as the content of the window
+    gtk_window_set_child(GTK_WINDOW(window), grid);
 
-    // Inicjalizacja pól wprowadzania i etykiet
+    // Initialize entry fields and labels
     for (int i = 0; i < 5; i++) {
-        bufor[i] = gtk_entry_buffer_new(NULL, 0);
-        wprowadzenie[i] = gtk_entry_new_with_buffer(bufor[i]);
-        gtk_widget_set_hexpand(wprowadzenie[i], TRUE);
-        gtk_grid_attach(GTK_GRID(siatka), wprowadzenie[i], 1, i, 1, 1);
+        buffers[i] = gtk_entry_buffer_new(NULL, 0);
+        entryWidgets[i] = gtk_entry_new_with_buffer(buffers[i]);
+        gtk_widget_set_hexpand(entryWidgets[i], TRUE);
+        gtk_grid_attach(GTK_GRID(grid), entryWidgets[i], 1, i, 1, 1);
 
-        etykieta[i] = gtk_label_new(NULL);
-        const char *teksty_etykiet[] = {"Imię", "Nazwisko", "Tytuł", "Cena", "Liczba"};
-        gtk_label_set_text(GTK_LABEL(etykieta[i]), teksty_etykiet[i]);
-        gtk_grid_attach(GTK_GRID(siatka), etykieta[i], 0, i, 1, 1);
+        labels[i] = gtk_label_new(NULL);
+        const char *labelTexts[] = {"First Name", "Last Name", "Title", "Price", "Quantity"};
+        gtk_label_set_text(GTK_LABEL(labels[i]), labelTexts[i]);
+        gtk_grid_attach(GTK_GRID(grid), labels[i], 0, i, 1, 1);
     }
 
-    // Przycisk do zapisu danych
-    przycisk = gtk_button_new_with_label("Zapisz");
-    g_signal_connect(przycisk, "clicked", G_CALLBACK(zapisz_dane), NULL);
-    gtk_widget_set_hexpand(przycisk, TRUE);
-    gtk_grid_attach(GTK_GRID(siatka), przycisk, 0, 5, 2, 1);
+    // Button to save data
+    button = gtk_button_new_with_label("Save");
+    g_signal_connect(button, "clicked", G_CALLBACK(saveData), NULL);
+    gtk_widget_set_hexpand(button, TRUE);
+    gtk_grid_attach(GTK_GRID(grid), button, 0, 5, 2, 1);
 
-    // Przycisk do wyświetlenia listy książek
-    przycisk = gtk_button_new_with_label("Wyświetl Listę");
-    g_signal_connect(przycisk, "clicked", G_CALLBACK(wyswietl_liste), app);
-    gtk_widget_set_hexpand(przycisk, TRUE);
-    gtk_grid_attach(GTK_GRID(siatka), przycisk, 0, 6, 2, 1);
+    // Button to display the list of books
+    button = gtk_button_new_with_label("Display List");
+    g_signal_connect(button, "clicked", G_CALLBACK(displayList), app);
+    gtk_widget_set_hexpand(button, TRUE);
+    gtk_grid_attach(GTK_GRID(grid), button, 0, 6, 2, 1);
 
-    // Przycisk do wyszukiwania książek
-    przycisk = gtk_button_new_with_label("Szukaj");
-    g_signal_connect(przycisk, "clicked", G_CALLBACK(szukaj_ksiazki), app);
-    gtk_widget_set_hexpand(przycisk, TRUE);
-    gtk_grid_attach(GTK_GRID(siatka), przycisk, 0, 7, 2, 1);
+    // Button to search for books
+    button = gtk_button_new_with_label("Search");
+    g_signal_connect(button, "clicked", G_CALLBACK(searchBook), app);
+    gtk_widget_set_hexpand(button, TRUE);
+    gtk_grid_attach(GTK_GRID(grid), button, 0, 7, 2, 1);
 
-    // Pusta etykieta dla lepszego formatowania
-    GtkWidget *pusta_etykieta = gtk_label_new("");
-    gtk_widget_set_hexpand(pusta_etykieta, TRUE);
-    gtk_grid_attach(GTK_GRID(siatka), pusta_etykieta, 0, 8, 2, 1);
+    // Empty label for better formatting
+    GtkWidget *emptyLabel = gtk_label_new("");
+    gtk_widget_set_hexpand(emptyLabel, TRUE);
+    gtk_grid_attach(GTK_GRID(grid), emptyLabel, 0, 8, 2, 1);
 
-    // Przycisk do zamknięcia aplikacji
-    przycisk = gtk_button_new_with_label("Wyjdź");
-    g_signal_connect_swapped(przycisk, "clicked", G_CALLBACK(gtk_window_destroy), okno);
-    gtk_widget_set_hexpand(przycisk, TRUE);
-    gtk_grid_attach(GTK_GRID(siatka), przycisk, 0, 9, 2, 1);
+    // Button to close the application
+    button = gtk_button_new_with_label("Exit");
+    g_signal_connect_swapped(button, "clicked", G_CALLBACK(gtk_window_destroy), window);
+    gtk_widget_set_hexpand(button, TRUE);
+    gtk_grid_attach(GTK_GRID(grid), button, 0, 9, 2, 1);
 
-    // Wyświetlenie głównego okna
-    gtk_window_present(GTK_WINDOW(okno));
+    // Display the main window
+    gtk_window_present(GTK_WINDOW(window));
 }
 
-// Główna funkcja programu
+// Main program function
 int main(int argc, char **argv) {
-    // Inicjalizacja aplikacji GTK
-    GtkApplication *aplikacja;
+    // Initialize the GTK application
+    GtkApplication *application;
     int status;
 
-    aplikacja = gtk_application_new("org.gtk.aplikacja", G_APPLICATION_DEFAULT_FLAGS);
-    g_signal_connect(aplikacja, "activate", G_CALLBACK(aktywuj), NULL);
-    status = g_application_run(G_APPLICATION(aplikacja), argc, argv);
-    g_object_unref(aplikacja);
+    application = gtk_application_new("org.gtk.application", G_APPLICATION_DEFAULT_FLAGS);
+    g_signal_connect(application, "activate", G_CALLBACK(activate), NULL);
+    status = g_application_run(G_APPLICATION(application), argc, argv);
+    g_object_unref(application);
 
     return status;
 }
